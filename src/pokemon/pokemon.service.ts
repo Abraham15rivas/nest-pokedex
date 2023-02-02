@@ -34,15 +34,18 @@ export class PokemonService {
       pokemon = await this.pokemonModel.findOne({ no: term })
     }
 
+    // MongoID
     if (!pokemon && isValidObjectId(term)) {
       pokemon = await this.pokemonModel.findById(term)
     }
 
+    // Name
     if (!pokemon) {
       pokemon = await this.pokemonModel.findOne({ name: term.toLowerCase().trim() })
     }
 
-    if(!pokemon) throw new NotFoundException(`pokemon not found for term ${term}`)
+    if (!pokemon) 
+      throw new NotFoundException(`Pokemon with id, name or no "${ term }" not found`);
 
     return pokemon;
   }
@@ -50,14 +53,15 @@ export class PokemonService {
   async update(term: string, updatePokemonDto: UpdatePokemonDto) {
     const pokemon = await this.findOne(term)
 
+    if (updatePokemonDto.name) {
+      updatePokemonDto.name = updatePokemonDto.name.toLowerCase()
+    }
+
     try {
-      if (updatePokemonDto.name) {
-        updatePokemonDto.name = updatePokemonDto.name.toLowerCase()
-        await pokemon.updateOne(updatePokemonDto)
-      }
-      return {...pokemon.toJSON(), ...updatePokemonDto}
+      await pokemon.updateOne(updatePokemonDto)
+      return { ...pokemon.toJSON(), ...updatePokemonDto }
     } catch (error) {
-      this.handleExceptions(error)
+      this.handleExceptions( error )
     }
   }
 
